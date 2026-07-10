@@ -20,8 +20,8 @@ export default function MatchFilterTabs({ current }: { current: string }) {
           href={f.value === "all" ? "/" : `/?filter=${f.value}`}
           className={
             current === f.value
-              ? "rounded-full bg-black px-3 py-1 text-white dark:bg-white dark:text-black"
-              : "rounded-full border border-black/15 px-3 py-1 text-black/70 hover:bg-black/5 dark:border-white/20 dark:text-white/70 dark:hover:bg-white/10"
+              ? "rounded-full bg-primary px-3 py-1 text-primary-foreground shadow-sm"
+              : "rounded-full border border-border px-3 py-1 text-foreground/70 transition-colors hover:bg-surface-muted"
           }
         >
           {f.label}

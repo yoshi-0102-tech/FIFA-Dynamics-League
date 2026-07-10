@@ -42,13 +42,13 @@ export default function LoginForm() {
         placeholder="パスワード"
         autoFocus
         required
-        className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-base outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+        className="w-full rounded-lg border border-border bg-transparent px-3 py-2.5 text-base outline-none focus:border-primary"
       />
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        className="w-full rounded-lg bg-primary px-3 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary-dark disabled:opacity-50"
       >
         {loading ? "確認中…" : "入る"}
       </button>

@@ -1,4 +1,5 @@
 import type { EventType, MatchStatus, Stage } from "@/lib/types";
+import type { BadgeTone } from "@/components/ui";
 
 export const STAGE_LABELS: Record<Stage, string> = {
   group: "グループリーグ",
@@ -20,4 +21,11 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   assist: "アシスト",
   yellow_card: "イエロー",
   red_card: "レッド",
+};
+
+export const STATUS_TONES: Record<MatchStatus, BadgeTone> = {
+  scheduled: "info",
+  completed: "success",
+  draw_replay_needed: "warning",
+  postponed: "danger",
 };

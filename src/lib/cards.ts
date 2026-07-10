@@ -6,9 +6,13 @@ export function getStageBucket(stage: Stage): StageBucket {
   return stage === "group" ? "group" : "tournament";
 }
 
-/** イエロー加算後の枚数が3の倍数に達したら出場停止を1回発生させる */
-export function shouldGenerateSuspension(stageYellowCountAfterEvent: number): boolean {
-  return stageYellowCountAfterEvent > 0 && stageYellowCountAfterEvent % 3 === 0;
+/**
+ * イエロー加算後の枚数が閾値（既定3枚。app_settings の yellow_cards_for_suspension で変更可能）の
+ * 倍数に達したら出場停止を1回発生させる。
+ */
+export function shouldGenerateSuspension(stageYellowCountAfterEvent: number, threshold = 3): boolean {
+  if (threshold <= 0) return false;
+  return stageYellowCountAfterEvent > 0 && stageYellowCountAfterEvent % threshold === 0;
 }
 
 export type MatchForResolution = {

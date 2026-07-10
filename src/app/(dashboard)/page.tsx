@@ -4,8 +4,9 @@ import { computeStandings } from "@/lib/standings";
 import { computePlayerRankings } from "@/lib/rankings";
 import { computeCardSummary, type StageBucket } from "@/lib/cards";
 import type { EventType, Match, MatchStatus, Stage } from "@/lib/types";
-import { STAGE_LABELS, STATUS_LABELS } from "./matches/stageLabels";
+import { STAGE_LABELS, STATUS_LABELS, STATUS_TONES } from "./matches/stageLabels";
 import MatchFilterTabs from "./MatchFilterTabs";
+import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,35 @@ function formatDate(value: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function SummaryCard({
+  icon,
+  title,
+  link,
+  children,
+}: {
+  icon: string;
+  title: string;
+  link?: { href: string; label: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="flex flex-col gap-2 p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground/80">
+          <span>{icon}</span>
+          {title}
+        </h2>
+        {link && (
+          <Link href={link.href} className="text-xs text-primary-dark hover:underline dark:text-primary">
+            {link.label}
+          </Link>
+        )}
+      </div>
+      {children}
+    </Card>
+  );
 }
 
 export default async function HomePage({
@@ -92,7 +122,7 @@ export default async function HomePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-bold">日程・結果</h1>
+      <PageHeader title="日程・結果" description="大会全体のダッシュボードです" />
 
       {matchesError && (
         <p className="text-sm text-red-600 dark:text-red-400">
@@ -100,74 +130,65 @@ export default async function HomePage({
         </p>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold">直近の結果</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SummaryCard icon="🏁" title="直近の結果">
           {recentResults.length ? (
-            <ul className="flex flex-col gap-1 text-sm">
+            <ul className="flex flex-col gap-1.5 text-sm">
               {recentResults.map((m) => (
-                <li key={m.id}>
-                  {formatDate(m.match_datetime)}: {matchLabel(m)} {m.home_score}-{m.away_score}
+                <li key={m.id} className="flex flex-col">
+                  <span className="text-xs text-foreground/50">{formatDate(m.match_datetime)}</span>
+                  <span>
+                    {matchLabel(m)} <span className="font-semibold">{m.home_score}-{m.away_score}</span>
+                  </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-black/50 dark:text-white/50">まだ結果がありません</p>
+            <p className="text-sm text-foreground/50">まだ結果がありません</p>
           )}
-        </section>
+        </SummaryCard>
 
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold">次回の試合予定</h2>
+        <SummaryCard icon="📅" title="次回の試合予定">
           {upcomingMatches.length ? (
-            <ul className="flex flex-col gap-1 text-sm">
+            <ul className="flex flex-col gap-1.5 text-sm">
               {upcomingMatches.map((m) => (
-                <li key={m.id}>
-                  {formatDate(m.match_datetime)}: {matchLabel(m)}
+                <li key={m.id} className="flex flex-col">
+                  <span className="text-xs text-foreground/50">{formatDate(m.match_datetime)}</span>
+                  <span>{matchLabel(m)}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-black/50 dark:text-white/50">予定されている試合がありません</p>
+            <p className="text-sm text-foreground/50">予定されている試合がありません</p>
           )}
-        </section>
+        </SummaryCard>
 
-        <section className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">順位表（簡易）</h2>
-            <Link href="/standings" className="text-sm text-blue-600 dark:text-blue-400">
-              全順位を見る
-            </Link>
-          </div>
+        <SummaryCard icon="🏆" title="順位表" link={{ href: "/standings", label: "全順位を見る" }}>
           {standingsRows.length ? (
             <>
-              <ol className="flex flex-col gap-1 text-sm">
+              <ol className="flex flex-col gap-1.5 text-sm">
                 {standingsRows.slice(0, 4).map((row) => (
-                  <li key={row.team_id}>
-                    {row.rank}
-                    {row.provisional && "*"}. {row.team_name} （勝点{row.points}）
+                  <li key={row.team_id} className="flex items-center justify-between">
+                    <span>
+                      {row.rank}
+                      {row.provisional && "*"}. {row.team_name}
+                    </span>
+                    <span className="font-semibold text-primary-dark dark:text-primary">{row.points}pt</span>
                   </li>
                 ))}
               </ol>
               {!fullyResolved && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  ※ 完全には順位を決定できません
-                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">※ 完全には順位を決定できません</p>
               )}
             </>
           ) : (
-            <p className="text-sm text-black/50 dark:text-white/50">まだ試合結果がありません</p>
+            <p className="text-sm text-foreground/50">まだ試合結果がありません</p>
           )}
-        </section>
+        </SummaryCard>
 
-        <section className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">出場停止中</h2>
-            <Link href="/cards" className="text-sm text-blue-600 dark:text-blue-400">
-              詳細を見る
-            </Link>
-          </div>
+        <SummaryCard icon="🚫" title="出場停止中" link={{ href: "/cards", label: "詳細を見る" }}>
           {suspendedRows.length ? (
-            <ul className="flex flex-col gap-1 text-sm">
+            <ul className="flex flex-col gap-1.5 text-sm">
               {suspendedRows.map((row) => (
                 <li key={`${row.player_name}-${row.team_id}`}>
                   {row.player_name}（{teamNameById.get(row.team_id) ?? "?"}）
@@ -175,101 +196,98 @@ export default async function HomePage({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-black/50 dark:text-white/50">現在出場停止中の選手はいません</p>
+            <p className="text-sm text-foreground/50">現在出場停止中の選手はいません</p>
           )}
-        </section>
+        </SummaryCard>
 
-        <section className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">得点ランキング上位</h2>
-            <Link href="/players" className="text-sm text-blue-600 dark:text-blue-400">
-              全成績を見る
-            </Link>
-          </div>
+        <SummaryCard icon="⚽" title="得点ランキング上位" link={{ href: "/players", label: "全成績を見る" }}>
           {goalRankings.length ? (
-            <ol className="flex flex-col gap-1 text-sm">
+            <ol className="flex flex-col gap-1.5 text-sm">
               {goalRankings.map((row) => (
-                <li key={`${row.player_name}-${row.team_id}`}>
-                  {row.rank}. {row.player_name}（{teamNameById.get(row.team_id) ?? "?"}） {row.count}
+                <li key={`${row.player_name}-${row.team_id}`} className="flex items-center justify-between">
+                  <span>
+                    {row.rank}. {row.player_name}（{teamNameById.get(row.team_id) ?? "?"}）
+                  </span>
+                  <span className="font-semibold">{row.count}</span>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-black/50 dark:text-white/50">記録がまだありません</p>
+            <p className="text-sm text-foreground/50">記録がまだありません</p>
           )}
-        </section>
+        </SummaryCard>
 
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold">アシストランキング上位</h2>
+        <SummaryCard icon="🎯" title="アシストランキング上位">
           {assistRankings.length ? (
-            <ol className="flex flex-col gap-1 text-sm">
+            <ol className="flex flex-col gap-1.5 text-sm">
               {assistRankings.map((row) => (
-                <li key={`${row.player_name}-${row.team_id}`}>
-                  {row.rank}. {row.player_name}（{teamNameById.get(row.team_id) ?? "?"}） {row.count}
+                <li key={`${row.player_name}-${row.team_id}`} className="flex items-center justify-between">
+                  <span>
+                    {row.rank}. {row.player_name}（{teamNameById.get(row.team_id) ?? "?"}）
+                  </span>
+                  <span className="font-semibold">{row.count}</span>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-black/50 dark:text-white/50">記録がまだありません</p>
+            <p className="text-sm text-foreground/50">記録がまだありません</p>
           )}
-        </section>
+        </SummaryCard>
       </div>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-bold">全試合日程・結果</h2>
         <MatchFilterTabs current={filter} />
 
-        <div className="overflow-x-auto rounded-lg border border-black/10 dark:border-white/10">
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="bg-black/5 dark:bg-white/5">
-              <tr>
-                <th className="px-3 py-2 font-medium">日時</th>
-                <th className="px-3 py-2 font-medium">ステージ</th>
-                <th className="px-3 py-2 font-medium">ホーム</th>
-                <th className="px-3 py-2 font-medium">スコア</th>
-                <th className="px-3 py-2 font-medium">アウェイ</th>
-                <th className="px-3 py-2 font-medium">状態</th>
-                <th className="px-3 py-2 font-medium">得点者</th>
-                <th className="px-3 py-2 font-medium">カード</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMatches.length ? (
-                filteredMatches.map((m) => {
+        <Card className="overflow-x-auto">
+          {filteredMatches.length ? (
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-3 py-3 font-medium text-foreground/60">日時</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">ステージ</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">ホーム</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">スコア</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">アウェイ</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">状態</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">得点者</th>
+                  <th className="px-3 py-3 font-medium text-foreground/60">カード</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMatches.map((m) => {
                   const goals = eventsFor(m.id, "goal");
                   const yellows = eventsFor(m.id, "yellow_card");
                   const reds = eventsFor(m.id, "red_card");
                   return (
-                    <tr key={m.id} className="border-t border-black/10 dark:border-white/10">
-                      <td className="px-3 py-2 whitespace-nowrap">{formatDate(m.match_datetime)}</td>
-                      <td className="px-3 py-2 whitespace-nowrap">{STAGE_LABELS[m.stage]}</td>
-                      <td className="px-3 py-2">{teamNameById.get(m.home_team_id) ?? "?"}</td>
-                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <tr key={m.id} className="border-t border-border transition-colors hover:bg-surface-muted/60">
+                      <td className="px-3 py-3 whitespace-nowrap text-foreground/70">{formatDate(m.match_datetime)}</td>
+                      <td className="px-3 py-3 whitespace-nowrap text-foreground/70">{STAGE_LABELS[m.stage]}</td>
+                      <td className="px-3 py-3 font-medium">{teamNameById.get(m.home_team_id) ?? "?"}</td>
+                      <td className="px-3 py-3 text-center font-semibold whitespace-nowrap">
                         {m.home_score ?? "-"} - {m.away_score ?? "-"}
                       </td>
-                      <td className="px-3 py-2">{teamNameById.get(m.away_team_id) ?? "?"}</td>
-                      <td className="px-3 py-2 whitespace-nowrap">{STATUS_LABELS[m.status]}</td>
-                      <td className="px-3 py-2 text-xs">
+                      <td className="px-3 py-3 font-medium">{teamNameById.get(m.away_team_id) ?? "?"}</td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <Badge tone={STATUS_TONES[m.status]}>{STATUS_LABELS[m.status]}</Badge>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-foreground/70">
                         {goals.length ? goals.map((g) => g.player_name).join(", ") : ""}
                       </td>
-                      <td className="px-3 py-2 text-xs whitespace-nowrap">
+                      <td className="px-3 py-3 text-xs whitespace-nowrap">
                         {yellows.map((y) => `🟨${y.player_name}`).join(" ")}
                         {yellows.length && reds.length ? " " : ""}
                         {reds.map((r) => `🟥${r.player_name}`).join(" ")}
                       </td>
                     </tr>
                   );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={8} className="px-3 py-6 text-center text-black/50 dark:text-white/50">
-                    該当する試合がありません
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <EmptyState>該当する試合がありません</EmptyState>
+          )}
+        </Card>
       </section>
     </div>
   );

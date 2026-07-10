@@ -41,7 +41,7 @@ export default function GenerateFixturesForm({
         <button
           onClick={() => handleGenerate("overwrite")}
           disabled={disabled}
-          className="rounded-md bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dark disabled:opacity-50"
         >
           {hasExistingMatches ? "上書きして生成" : "生成する"}
         </button>
@@ -49,14 +49,14 @@ export default function GenerateFixturesForm({
           <button
             onClick={() => handleGenerate("append")}
             disabled={disabled}
-            className="rounded-md border border-black/15 px-4 py-2 text-sm disabled:opacity-50 dark:border-white/20"
+            className="rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-surface-muted disabled:opacity-50"
           >
             追加生成
           </button>
         )}
         <Link
           href="/matches"
-          className="rounded-md border border-black/15 px-4 py-2 text-sm dark:border-white/20"
+          className="rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-surface-muted"
         >
           キャンセル
         </Link>

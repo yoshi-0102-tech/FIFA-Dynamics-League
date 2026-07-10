@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import TeamForm from "../TeamForm";
 import { updateTeam } from "../actions";
 import DeleteTeamButton from "../DeleteTeamButton";
+import { PageHeader, Card } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,13 @@ export default async function EditTeamPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">チーム編集</h1>
-        <DeleteTeamButton teamId={team.id} teamName={team.name} redirectTo="/teams" />
-      </div>
-      <TeamForm team={team} action={updateTeamWithId} submitLabel="保存する" />
+      <PageHeader
+        title="チーム編集"
+        actions={<DeleteTeamButton teamId={team.id} teamName={team.name} redirectTo="/teams" />}
+      />
+      <Card className="max-w-md p-5">
+        <TeamForm team={team} action={updateTeamWithId} submitLabel="保存する" />
+      </Card>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default function GenerateTournamentButton() {
     <button
       onClick={handleClick}
       disabled={isPending}
-      className="rounded-md border border-black/15 px-3 py-2 text-sm disabled:opacity-50 dark:border-white/20"
+      className="rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-surface-muted disabled:opacity-50"
     >
       決勝トーナメント生成
     </button>

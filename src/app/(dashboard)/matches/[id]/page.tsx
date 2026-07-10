@@ -7,6 +7,7 @@ import { createMatchEvent } from "./eventActions";
 import EventForm from "./EventForm";
 import DeleteEventButton from "./DeleteEventButton";
 import { EVENT_TYPE_LABELS } from "../stageLabels";
+import { PageHeader, Card, EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -63,66 +64,67 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">試合編集</h1>
-          <DeleteMatchButton matchId={match.id} redirectTo="/matches" />
-        </div>
-        <MatchForm match={match} teams={teams ?? []} action={updateMatchWithId} submitLabel="保存する" />
+        <PageHeader
+          title="試合編集"
+          description={`${homeTeam.name} vs ${awayTeam.name}`}
+          actions={<DeleteMatchButton matchId={match.id} redirectTo="/matches" />}
+        />
+        <Card className="max-w-md p-5">
+          <MatchForm match={match} teams={teams ?? []} action={updateMatchWithId} submitLabel="保存する" />
+        </Card>
       </div>
 
       <div className="flex max-w-2xl flex-col gap-4">
         <h2 className="text-xl font-bold">選手イベント</h2>
 
         {warnings.length > 0 && (
-          <div className="flex flex-col gap-1 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex flex-col gap-1 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
             {warnings.map((w) => (
               <p key={w}>⚠ {w}</p>
             ))}
           </div>
         )}
 
-        <div className="overflow-x-auto rounded-lg border border-black/10 dark:border-white/10">
-          <table className="w-full min-w-[520px] text-left text-sm">
-            <thead className="bg-black/5 dark:bg-white/5">
-              <tr>
-                <th className="px-3 py-2 font-medium">種別</th>
-                <th className="px-3 py-2 font-medium">選手</th>
-                <th className="px-3 py-2 font-medium">チーム</th>
-                <th className="px-3 py-2 font-medium">分</th>
-                <th className="px-3 py-2 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {matchEvents.length ? (
-                matchEvents.map((event) => (
-                  <tr key={event.id} className="border-t border-black/10 dark:border-white/10">
-                    <td className="px-3 py-2">{EVENT_TYPE_LABELS[event.event_type]}</td>
-                    <td className="px-3 py-2">{event.player_name}</td>
-                    <td className="px-3 py-2">{teamNameById.get(event.team_id) ?? "?"}</td>
-                    <td className="px-3 py-2">{event.minute ?? ""}</td>
-                    <td className="px-3 py-2 text-right">
+        <Card className="overflow-x-auto">
+          {matchEvents.length ? (
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead className="bg-surface-muted">
+                <tr>
+                  <th className="px-4 py-3 font-medium text-foreground/60">種別</th>
+                  <th className="px-4 py-3 font-medium text-foreground/60">選手</th>
+                  <th className="px-4 py-3 font-medium text-foreground/60">チーム</th>
+                  <th className="px-4 py-3 font-medium text-foreground/60">分</th>
+                  <th className="px-4 py-3 font-medium text-foreground/60"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {matchEvents.map((event) => (
+                  <tr key={event.id} className="border-t border-border transition-colors hover:bg-surface-muted/60">
+                    <td className="px-4 py-3">{EVENT_TYPE_LABELS[event.event_type]}</td>
+                    <td className="px-4 py-3 font-medium">{event.player_name}</td>
+                    <td className="px-4 py-3 text-foreground/70">{teamNameById.get(event.team_id) ?? "?"}</td>
+                    <td className="px-4 py-3 text-foreground/70">{event.minute ?? ""}</td>
+                    <td className="px-4 py-3 text-right">
                       <DeleteEventButton matchId={id} eventId={event.id} />
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-black/50 dark:text-white/50">
-                    イベントはまだありません
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <EmptyState>イベントはまだありません</EmptyState>
+          )}
+        </Card>
 
-        <EventForm
-          action={createMatchEventWithId}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          goalEvents={goalEvents}
-          playerSuggestions={playerSuggestions}
-        />
+        <Card className="p-5">
+          <EventForm
+            action={createMatchEventWithId}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            goalEvents={goalEvents}
+            playerSuggestions={playerSuggestions}
+          />
+        </Card>
       </div>
     </div>
   );

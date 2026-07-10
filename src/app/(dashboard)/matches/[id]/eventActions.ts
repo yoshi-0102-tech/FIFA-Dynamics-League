@@ -72,18 +72,22 @@ async function maybeCreateSuspension({
   const thisMatchStage = matchStageById.get(matchId) ?? "group";
   const currentBucket = getStageBucket(thisMatchStage);
 
-  const { data: yellowEvents } = await supabase
-    .from("match_events")
-    .select("match_id")
-    .eq("player_name", playerName)
-    .eq("team_id", teamId)
-    .eq("event_type", "yellow_card");
+  const [{ data: yellowEvents }, { data: thresholdSetting }] = await Promise.all([
+    supabase
+      .from("match_events")
+      .select("match_id")
+      .eq("player_name", playerName)
+      .eq("team_id", teamId)
+      .eq("event_type", "yellow_card"),
+    supabase.from("app_settings").select("value").eq("key", "yellow_cards_for_suspension").maybeSingle(),
+  ]);
 
   const stageYellowCount = (yellowEvents ?? []).filter(
     (e) => getStageBucket(matchStageById.get(e.match_id) ?? "group") === currentBucket,
   ).length;
+  const threshold = Number(thresholdSetting?.value ?? 3) || 3;
 
-  if (shouldGenerateSuspension(stageYellowCount)) {
+  if (shouldGenerateSuspension(stageYellowCount, threshold)) {
     const { error } = await supabase.from("suspensions").insert({
       player_name: playerName,
       team_id: teamId,

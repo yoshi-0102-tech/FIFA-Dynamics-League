@@ -25,14 +25,14 @@ export default function EventForm({
   });
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-lg border border-black/10 p-4 dark:border-white/10">
+    <form action={formAction} className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-3">
         <label className="flex flex-col gap-1 text-sm">
           種別
           <select
             name="event_type"
             defaultValue="goal"
-            className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
           >
             {Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -46,7 +46,7 @@ export default function EventForm({
           <select
             name="team_id"
             defaultValue={homeTeam.id}
-            className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
           >
             <option value={homeTeam.id}>{homeTeam.name}</option>
             <option value={awayTeam.id}>{awayTeam.name}</option>
@@ -58,7 +58,7 @@ export default function EventForm({
             type="number"
             min={0}
             name="minute"
-            className="w-20 rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="w-20 rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
           />
         </label>
       </div>
@@ -68,7 +68,7 @@ export default function EventForm({
           name="player_name"
           list="player-name-suggestions"
           required
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         />
         <datalist id="player-name-suggestions">
           {playerSuggestions.map((name) => (
@@ -82,7 +82,7 @@ export default function EventForm({
           <select
             name="related_goal_event_id"
             defaultValue=""
-            className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
           >
             <option value="">なし</option>
             {goalEvents.map((g) => (
@@ -97,14 +97,14 @@ export default function EventForm({
         備考（任意）
         <input
           name="note"
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         />
       </label>
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-md bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        className="self-start rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dark disabled:opacity-50"
       >
         追加する
       </button>

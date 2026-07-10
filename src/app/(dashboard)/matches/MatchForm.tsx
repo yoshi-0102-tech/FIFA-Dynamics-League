@@ -34,7 +34,7 @@ export default function MatchForm({
           name="home_team_id"
           defaultValue={match?.home_team_id}
           required
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         >
           <option value="" disabled>
             選択してください
@@ -52,7 +52,7 @@ export default function MatchForm({
           name="away_team_id"
           defaultValue={match?.away_team_id}
           required
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         >
           <option value="" disabled>
             選択してください
@@ -72,7 +72,7 @@ export default function MatchForm({
             min={0}
             name="home_score"
             defaultValue={match?.home_score ?? ""}
-            className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
           />
         </label>
         <label className="flex flex-1 flex-col gap-1 text-sm">
@@ -82,7 +82,7 @@ export default function MatchForm({
             min={0}
             name="away_score"
             defaultValue={match?.away_score ?? ""}
-            className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
           />
         </label>
       </div>
@@ -92,7 +92,7 @@ export default function MatchForm({
           type="datetime-local"
           name="match_datetime"
           defaultValue={toDatetimeLocal(match?.match_datetime ?? null)}
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">
@@ -100,7 +100,7 @@ export default function MatchForm({
         <select
           name="stage"
           defaultValue={match?.stage ?? "group"}
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         >
           {Object.entries(STAGE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -114,7 +114,7 @@ export default function MatchForm({
         <select
           name="status"
           defaultValue={match?.status ?? "scheduled"}
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         >
           {Object.entries(STATUS_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -129,7 +129,7 @@ export default function MatchForm({
           name="note"
           defaultValue={match?.note ?? ""}
           rows={2}
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-border bg-transparent px-3 py-2 outline-none focus:border-primary"
         />
       </label>
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
@@ -137,13 +137,13 @@ export default function MatchForm({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-md bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dark disabled:opacity-50"
         >
           {submitLabel}
         </button>
         <Link
           href="/matches"
-          className="rounded-md border border-black/15 px-4 py-2 text-sm dark:border-white/20"
+          className="rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-surface-muted"
         >
           キャンセル
         </Link>

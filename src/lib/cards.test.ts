@@ -29,6 +29,13 @@ describe("shouldGenerateSuspension", () => {
     expect(shouldGenerateSuspension(6)).toBe(true);
     expect(shouldGenerateSuspension(0)).toBe(false);
   });
+
+  it("閾値を変更できる（app_settings の yellow_cards_for_suspension 相当）", () => {
+    expect(shouldGenerateSuspension(2, 2)).toBe(true);
+    expect(shouldGenerateSuspension(4, 2)).toBe(true);
+    expect(shouldGenerateSuspension(3, 2)).toBe(false);
+    expect(shouldGenerateSuspension(5, 0)).toBe(false);
+  });
 });
 
 describe("resolveNextUnplayedMatchId", () => {
