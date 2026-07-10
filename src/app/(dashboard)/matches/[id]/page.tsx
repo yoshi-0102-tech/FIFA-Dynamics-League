@@ -36,7 +36,10 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
     .filter((e) => e.event_type === "goal")
     .map((e) => ({ id: e.id, player_name: e.player_name, team_id: e.team_id }));
 
-  const playerSuggestions = Array.from(new Set((allEvents ?? []).map((e) => e.player_name))).sort();
+  const matchPlayerNames = Array.from(new Set(matchEvents.map((e) => e.player_name))).sort();
+  const otherPlayerNames = Array.from(new Set((allEvents ?? []).map((e) => e.player_name)))
+    .filter((name) => !matchPlayerNames.includes(name))
+    .sort();
 
   const homeGoalCount = matchEvents.filter((e) => e.event_type === "goal" && e.team_id === match.home_team_id).length;
   const awayGoalCount = matchEvents.filter((e) => e.event_type === "goal" && e.team_id === match.away_team_id).length;
@@ -122,7 +125,8 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
             homeTeam={homeTeam}
             awayTeam={awayTeam}
             goalEvents={goalEvents}
-            playerSuggestions={playerSuggestions}
+            matchPlayerNames={matchPlayerNames}
+            otherPlayerNames={otherPlayerNames}
           />
         </Card>
       </div>
