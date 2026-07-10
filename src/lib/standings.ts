@@ -2,9 +2,10 @@
  * グループリーグ順位表の集計（純粋関数）。要件定義書 §4.1 準拠。
  *
  * 順位決定ルール（上から順に適用）:
- *   1. 勝点  2. 得失点差  3. 得点数  4. 勝利数
- *   5. 直接対決の成績（同順位候補チーム同士の試合だけで 1〜4 を再計算）
- *   6. それでも並ぶ場合は同順位（仮順位は表示順）とし、`provisional=true` を立てる
+ *   1. 勝点  2. 得失点差
+ *   3. 直接対決の成績（同順位候補チーム同士の試合だけでの 勝点 → 得失点差）
+ *   4. 総得点数
+ *   5. それでも並ぶ場合は同順位（仮順位は表示順）とし、`provisional=true` を立てる
  *
  * DB には集計結果を保存せず、呼び出し側が「グループリーグ かつ 終了」の試合を
  * 渡して都度計算する。集計結果は完全に入力に対して決定的（純粋関数）。
@@ -117,23 +118,34 @@ function computeStats(
   return stats;
 }
 
-/** 勝点→得失差→得点→勝利数 の4指標がすべて等しいか。 */
+/** 勝点→得失差 の2指標がすべて等しいか（第1段階のグルーピング基準）。 */
 function keysEqual(a: Stat, b: Stat): boolean {
+  return a.points === b.points && a.goal_difference === b.goal_difference;
+}
+
+/** 勝点→得失差 の降順比較（0 なら2指標同点）。 */
+function compareKeys(a: Stat, b: Stat): number {
+  return b.points - a.points || b.goal_difference - a.goal_difference;
+}
+
+/**
+ * 直接対決ミニリーグでの勝点→得失差、それでも並べば全体の総得点数で比較する。
+ * h2hA/h2hB は対象チーム同士の試合だけで集計した Stat、globalA/globalB は
+ * 全体集計（グループリーグ全試合）の Stat。
+ */
+function h2hKeysEqual(h2hA: Stat, h2hB: Stat, globalA: Stat, globalB: Stat): boolean {
   return (
-    a.points === b.points &&
-    a.goal_difference === b.goal_difference &&
-    a.goals_for === b.goals_for &&
-    a.won === b.won
+    h2hA.points === h2hB.points &&
+    h2hA.goal_difference === h2hB.goal_difference &&
+    globalA.goals_for === globalB.goals_for
   );
 }
 
-/** 勝点→得失差→得点→勝利数 の降順比較（0 なら4指標同点）。 */
-function compareKeys(a: Stat, b: Stat): number {
+function compareH2HKeys(h2hA: Stat, h2hB: Stat, globalA: Stat, globalB: Stat): number {
   return (
-    b.points - a.points ||
-    b.goal_difference - a.goal_difference ||
-    b.goals_for - a.goals_for ||
-    b.won - a.won
+    h2hB.points - h2hA.points ||
+    h2hB.goal_difference - h2hA.goal_difference ||
+    globalB.goals_for - globalA.goals_for
   );
 }
 
@@ -145,7 +157,7 @@ export function computeStandings(
   const base = computeStats(teams, matches, allIds);
   const statList = teams.map((t) => base.get(t.id)!);
 
-  // 第1段階: 全体を 勝点→得失差→得点→勝利数（同点は表示順）で並べる
+  // 第1段階: 全体を 勝点→得失差（同点は表示順）で並べる
   const sorted = [...statList].sort(
     (a, b) => compareKeys(a, b) || a.display_order - b.display_order,
   );
@@ -161,7 +173,7 @@ export function computeStandings(
     if (group.length === 1) {
       buckets.push(group);
     } else {
-      // 第5段階: 同順位候補チーム同士の直接対決だけで再集計（ミニリーグ）
+      // 第3段階: 同順位候補チーム同士の直接対決（勝点→得失差）、次いで総得点数で再集計
       const groupIds = new Set(group.map((g) => g.team_id));
       const groupTeams = group.map((g) => ({
         id: g.team_id,
@@ -172,16 +184,21 @@ export function computeStandings(
       const h2hSorted = [...group].sort((a, b) => {
         const A = h2h.get(a.team_id)!;
         const B = h2h.get(b.team_id)!;
-        return compareKeys(A, B) || a.display_order - b.display_order;
+        return compareH2HKeys(A, B, a, b) || a.display_order - b.display_order;
       });
 
-      // ミニリーグでも4指標が並ぶ連続チームは同順位（provisional）
+      // 直接対決の勝点・得失差・総得点数まで並ぶ連続チームは同順位（provisional）
       let k = 0;
       while (k < h2hSorted.length) {
         let l = k;
         while (
           l + 1 < h2hSorted.length &&
-          keysEqual(h2h.get(h2hSorted[k].team_id)!, h2h.get(h2hSorted[l + 1].team_id)!)
+          h2hKeysEqual(
+            h2h.get(h2hSorted[k].team_id)!,
+            h2h.get(h2hSorted[l + 1].team_id)!,
+            h2hSorted[k],
+            h2hSorted[l + 1],
+          )
         ) {
           l++;
         }

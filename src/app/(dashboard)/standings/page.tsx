@@ -66,7 +66,7 @@ export default async function StandingsPage() {
         <>
           {!fullyResolved && (
             <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
-              ※ 同順位（<span className="font-medium">*</span>印）のチームは、勝点・得失点差・得点・勝利数・直接対決まで比較しても並んでいるため、
+              ※ 同順位（<span className="font-medium">*</span>印）のチームは、勝点・得失点差・直接対決（当該チーム間の勝点・得失点差）・総得点数まで比較しても並んでいるため、
               完全には順位を決定できません。表示順は仮の並びです。
             </p>
           )}

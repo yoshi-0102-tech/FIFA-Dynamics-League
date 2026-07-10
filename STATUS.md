@@ -11,7 +11,7 @@
 - **ステップ3 チーム管理 CRUD**: `src/app/(dashboard)/teams/`
 - **ステップ4 試合日程管理 CRUD + 日程自動生成**: `src/app/(dashboard)/matches/`（一覧・追加・編集・削除）+ 総当たり生成の純粋関数 `src/lib/fixtures.ts`（テスト込み）+ 生成UI `matches/generate/`（上書き/追加＋確認ダイアログ）
 - **ステップ5 試合結果入力 + 選手イベント入力**: `matches/[id]/` にスコア・ステータス編集と選手イベント（ゴール/アシスト/イエロー/レッド）フォームを統合。選手名は過去入力からサジェスト（`<datalist>`）。ゴール数⇔スコア不一致・アシスト数>ゴール数は警告表示（非ブロッキング）
-- **ステップ6 順位表集計**: `src/lib/standings.ts`（勝点→得失差→得点→勝利数→直接対決ミニリーグ→「順位未確定(provisional)」）+ テスト + `/standings` 画面
+- **ステップ6 順位表集計**: `src/lib/standings.ts`（勝点→得失差→直接対決（当該チーム間の勝点→得失差）→総得点数→「順位未確定(provisional)」。2026-07-10 に順位決定基準を仕様変更）+ テスト + `/standings` 画面
 - **ステップ7 日程結果一覧 + トップページダッシュボード**: `(dashboard)/page.tsx` を実データ化。直近結果/次回予定/順位表簡易/出場停止中/得点・アシストランキング上位 + フィルター付き全試合一覧（得点者・カード表示込み）
 - **ステップ8 得点・アシストランキング**: `src/lib/rankings.ts`（選手名＋チームの組で集計、同数同順位）+ テスト + `/players` 画面
 - **ステップ9 カード集計 + 出場停止自動管理**（本アプリの肝）: `src/lib/cards.ts`
@@ -24,7 +24,7 @@
 
 ## テスト・検証状況
 
-- `npm test`（vitest）: 5ファイル・40ケース全通過（fixtures / standings / rankings / cards / tournament）
+- `npm test`（vitest）: 5ファイル・42ケース全通過（fixtures / standings / rankings / cards / tournament）
 - `npx tsc --noEmit` / `npm run build`: クリーン
 - 動作確認: ローカル Docker（Postgres + PostgREST）で実データベース相手に全機能を E2E 確認済み（チーム/試合CRUD、日程自動生成、結果・イベント入力、カード3枚→出場停止→次試合終了で自動消化、決勝トーナメント生成→準決勝同点→再試合→決勝/3位決定戦自動生成、ダッシュボードのフィルター等）
 - **本番デプロイ確認済み**: ユーザーが実 Supabase プロジェクトを作成・`schema.sql` 実行 → `.env.local` に実値設定 → 接続テスト（読み取り/書き込み/削除）成功 → GitHub push（初回コミット）→ Vercel プロジェクト作成・環境変数設定（Production/Preview/Development全て）→ 本番デプロイ → curl でログイン・Cookie発行・Supabase読み取りまで確認 → GitHub連携（push時自動デプロイ）設定・動作確認済み
