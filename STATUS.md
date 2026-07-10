@@ -1,7 +1,7 @@
 # STATUS — fifa-dynamics-league
 
-- 段階: MVP実装完了（要件定義書 §8 のステップ1〜11すべて実装・動作確認済み）
-- 一言: 認証・スキーマ・チーム/試合CRUD・日程自動生成・結果/選手イベント入力・順位表・個人成績・カード/出場停止自動管理・決勝トーナメント生成/再試合フロー・運用ドキュメントまで一通り完成。次はユーザーによる実 Supabase プロジェクト作成 + デプロイ。
+- 段階: MVP実装完了 + 本番デプロイ済み
+- 一言: 要件定義書 §8 のステップ1〜11すべて実装。実 Supabase プロジェクト接続確認済み、GitHub push → Vercel 自動デプロイの連携も完了。本番URL: https://fifa-dynamics-league.vercel.app
 - 更新日: 2026-07-10
 
 ## 実装済み（要件定義書 §8 対応）
@@ -27,14 +27,14 @@
 - `npm test`（vitest）: 5ファイル・40ケース全通過（fixtures / standings / rankings / cards / tournament）
 - `npx tsc --noEmit` / `npm run build`: クリーン
 - 動作確認: ローカル Docker（Postgres + PostgREST）で実データベース相手に全機能を E2E 確認済み（チーム/試合CRUD、日程自動生成、結果・イベント入力、カード3枚→出場停止→次試合終了で自動消化、決勝トーナメント生成→準決勝同点→再試合→決勝/3位決定戦自動生成、ダッシュボードのフィルター等）
-- 本番の実 Supabase プロジェクトへの接続確認は未実施（ユーザー作業）
+- **本番デプロイ確認済み**: ユーザーが実 Supabase プロジェクトを作成・`schema.sql` 実行 → `.env.local` に実値設定 → 接続テスト（読み取り/書き込み/削除）成功 → GitHub push（初回コミット）→ Vercel プロジェクト作成・環境変数設定（Production/Preview/Development全て）→ 本番デプロイ → curl でログイン・Cookie発行・Supabase読み取りまで確認 → GitHub連携（push時自動デプロイ）設定・動作確認済み
+- 本番URL: https://fifa-dynamics-league.vercel.app／GitHub: https://github.com/yoshi-0102-tech/FIFA-Dynamics-League
 
-## 次の一手（ユーザー作業）
+## 次の一手（ユーザー作業・運用開始前）
 
-1. Supabase で実プロジェクトを作成し、`supabase/schema.sql` を SQL Editor で実行
-2. `.env.local`（ローカル）/ Vercel の Environment Variables（本番）に実値を設定（`APP_PASSWORD` / `AUTH_COOKIE_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`）
-3. Vercel にデプロイし、実データでチーム登録〜試合入力の一連の流れを一度通しで確認
-4. Supabase Free の7日間自動ポーズ対策（Cron ping か手動再開運用）を運用開始前に決定（README「改善案リスト」参照）
+1. Supabase Free の7日間自動ポーズ対策（Cron ping か手動再開運用）を決定（README「改善案リスト」参照）
+2. 参加者にパスワード（`APP_PASSWORD`）と本番URLを共有
+3. チーム登録 → 日程自動生成 → 大会運用開始
 
 ## 注意事項（重要）
 
