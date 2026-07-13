@@ -22,7 +22,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
       .select("*")
       .eq("match_id", id)
       .order("created_at", { ascending: true }),
-    supabase.from("match_events").select("player_name"),
+    supabase.from("match_events").select("player_name, team_id"),
   ]);
 
   if (!match) notFound();
@@ -36,10 +36,22 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
     .filter((e) => e.event_type === "goal")
     .map((e) => ({ id: e.id, player_name: e.player_name, team_id: e.team_id }));
 
-  const matchPlayerNames = Array.from(new Set(matchEvents.map((e) => e.player_name))).sort();
-  const otherPlayerNames = Array.from(new Set((allEvents ?? []).map((e) => e.player_name)))
-    .filter((name) => !matchPlayerNames.includes(name))
-    .sort();
+  function playersForTeam(teamId: string) {
+    const matchPlayers = Array.from(
+      new Set(matchEvents.filter((e) => e.team_id === teamId).map((e) => e.player_name)),
+    ).sort();
+    const otherPlayers = Array.from(
+      new Set((allEvents ?? []).filter((e) => e.team_id === teamId).map((e) => e.player_name)),
+    )
+      .filter((name) => !matchPlayers.includes(name))
+      .sort();
+    return { matchPlayers, otherPlayers };
+  }
+
+  const playersByTeam = {
+    [homeTeam.id]: playersForTeam(homeTeam.id),
+    [awayTeam.id]: playersForTeam(awayTeam.id),
+  };
 
   const homeGoalCount = matchEvents.filter((e) => e.event_type === "goal" && e.team_id === match.home_team_id).length;
   const awayGoalCount = matchEvents.filter((e) => e.event_type === "goal" && e.team_id === match.away_team_id).length;
@@ -125,8 +137,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
             homeTeam={homeTeam}
             awayTeam={awayTeam}
             goalEvents={goalEvents}
-            matchPlayerNames={matchPlayerNames}
-            otherPlayerNames={otherPlayerNames}
+            playersByTeam={playersByTeam}
           />
         </Card>
       </div>
