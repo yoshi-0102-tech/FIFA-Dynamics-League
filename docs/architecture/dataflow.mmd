@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor U as 参加者
+    participant EF as EventForm<br/>(matches/[id])
+    participant EA as eventActions.ts<br/>createMatchEvent
+    participant Cards as lib/cards.ts<br/>純粋関数
+    participant DB as Supabase<br/>match_events / suspensions
+    participant MA as matches/actions.ts<br/>updateMatch
+    participant TA as tournamentActions.ts
+
+    U->>EF: 選手イベント入力（イエローカード）
+    EF->>EA: createMatchEvent(matchId, formData)
+    EA->>DB: match_events に INSERT
+    EA->>DB: 同一選手の黄カード数を取得（ステージ内）
+    EA->>Cards: getStageBucket(stage)<br/>shouldGenerateSuspension(count, threshold)
+    Cards-->>EA: 3の倍数に達した？(true/false)
+    alt 停止条件を満たす
+        EA->>DB: suspensions に INSERT<br/>(is_served=false, suspension_match_id=null)
+    end
+
+    Note over U,TA: 後日、対象チームの試合が「終了」になったとき
+
+    U->>MA: 試合ステータスを「終了」に更新
+    MA->>DB: 未消化 suspensions を全件取得
+    MA->>Cards: resolveNextUnplayedMatchId(teamId, matches, sourceMatchId)<br/>で対象試合を動的解決
+    Cards-->>MA: 解決された次の未実施試合ID
+    alt 解決結果 == 今回終了した試合
+        MA->>DB: suspensions.is_served=true<br/>suspension_match_id を確定保存
+    end
+    MA->>DB: matches を更新（スコア・ステータス）
+    MA->>TA: reflectTournamentProgress()<br/>（グループ全終了→準決勝生成 等）
+    TA->>DB: 必要なら次ラウンドの matches を自動生成

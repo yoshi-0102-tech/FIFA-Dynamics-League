@@ -1,0 +1,29 @@
+flowchart LR
+    participant_user["参加者（スマホ/PC ブラウザ）"]
+
+    subgraph vercel["Vercel（Hobby プラン）"]
+        proxy["proxy.ts\n（旧 middleware）\nCookie 検証・全ページ/API 保護"]
+        pages["App Router\nServer Components\n（一覧・集計表示）"]
+        actions["Server Actions / Route Handlers\n（CRUD・イベント登録・集計トリガー）"]
+        lib["lib/\n純粋関数\nstandings / cards / rankings /\nfixtures / tournament"]
+    end
+
+    subgraph supabase["Supabase（Free プラン）"]
+        pg[("PostgreSQL\nteams / matches /\nmatch_events / suspensions /\napp_settings")]
+    end
+
+    env[["環境変数\nAPP_PASSWORD\nAUTH_COOKIE_SECRET\nSUPABASE_URL\nSUPABASE_SERVICE_ROLE_KEY"]]
+
+    participant_user -- "HTTPS" --> proxy
+    proxy -- "Cookie 未検証なら /login へ" --> participant_user
+    proxy -- "検証OK" --> pages
+    pages --> actions
+    actions --> lib
+    lib -- "計算結果" --> pages
+    actions -- "service role key で\nサーバー側からのみアクセス" --> pg
+    pages -- "読み取り" --> pg
+    env -. "設定値を注入" .-> proxy
+    env -. "設定値を注入" .-> actions
+
+    style pg fill:#336791,color:#fff
+    style env fill:#eee,stroke:#999,stroke-dasharray: 4 4
