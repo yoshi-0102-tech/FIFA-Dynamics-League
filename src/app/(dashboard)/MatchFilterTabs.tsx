@@ -1,4 +1,4 @@
-import Link from "next/link";
+"use client";
 
 const FILTERS = [
   { value: "all", label: "全試合" },
@@ -11,13 +11,27 @@ const FILTERS = [
   { value: "completed", label: "終了" },
 ] as const;
 
-export default function MatchFilterTabs({ current }: { current: string }) {
+export type MatchFilter = (typeof FILTERS)[number]["value"];
+
+export function isMatchFilter(value: string | null): value is MatchFilter {
+  return FILTERS.some((filter) => filter.value === value);
+}
+
+export default function MatchFilterTabs({
+  current,
+  onChange,
+}: {
+  current: MatchFilter;
+  onChange: (filter: MatchFilter) => void;
+}) {
   return (
     <div className="flex flex-wrap gap-2 text-sm">
       {FILTERS.map((f) => (
-        <Link
+        <button
+          type="button"
           key={f.value}
-          href={f.value === "all" ? "/" : `/?filter=${f.value}`}
+          onClick={() => onChange(f.value)}
+          aria-pressed={current === f.value}
           className={
             current === f.value
               ? "rounded-full bg-primary px-3 py-1 text-primary-foreground shadow-sm"
@@ -25,7 +39,7 @@ export default function MatchFilterTabs({ current }: { current: string }) {
           }
         >
           {f.label}
-        </Link>
+        </button>
       ))}
     </div>
   );

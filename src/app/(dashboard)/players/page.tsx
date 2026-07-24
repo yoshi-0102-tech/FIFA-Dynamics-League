@@ -1,8 +1,6 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getMatchEvents, getTeams } from "@/lib/data";
 import { computePlayerRankings, type RankingRow } from "@/lib/rankings";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
-
-export const dynamic = "force-dynamic";
 
 const RANK_MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
@@ -48,24 +46,15 @@ function RankingTable({ title, rows, teamNameById }: { title: string; rows: Rank
 }
 
 export default async function PlayersPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: events, error }, { data: teams }] = await Promise.all([
-    supabase.from("match_events").select("player_name, team_id, event_type"),
-    supabase.from("teams").select("id, name"),
-  ]);
+  const [events, teams] = await Promise.all([getMatchEvents(), getTeams()]);
 
-  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name]));
-  const goalRankings = computePlayerRankings(events ?? [], "goal");
-  const assistRankings = computePlayerRankings(events ?? [], "assist");
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
+  const goalRankings = computePlayerRankings(events, "goal");
+  const assistRankings = computePlayerRankings(events, "assist");
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="個人成績" description="得点・アシストのランキングです" />
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          読み込みに失敗しました: {error.message}
-        </p>
-      )}
       <RankingTable title="得点ランキング" rows={goalRankings} teamNameById={teamNameById} />
       <RankingTable title="アシストランキング" rows={assistRankings} teamNameById={teamNameById} />
     </div>

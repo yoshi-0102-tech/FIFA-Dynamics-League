@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { invalidateLeagueData } from "@/lib/data-cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { generateRoundRobinFixtures } from "@/lib/fixtures";
 import { resolveNextUnplayedMatchId } from "@/lib/cards";
@@ -65,7 +65,7 @@ export async function createMatch(_prevState: FormState, formData: FormData): Pr
   const { error } = await supabase.from("matches").insert(parsed.values);
   if (error) return { error: error.message };
 
-  revalidatePath("/matches");
+  invalidateLeagueData();
   redirect("/matches");
 }
 
@@ -84,13 +84,19 @@ export async function updateMatch(
   }
 
   const { error } = await supabase.from("matches").update(parsed.values).eq("id", id);
-  if (error) return { error: error.message };
-
-  if (parsed.values.status === "completed") {
-    await reflectTournamentProgress();
+  if (error) {
+    invalidateLeagueData();
+    return { error: error.message };
   }
 
-  revalidatePath("/matches");
+  try {
+    if (parsed.values.status === "completed") {
+      await reflectTournamentProgress();
+    }
+  } finally {
+    invalidateLeagueData();
+  }
+
   redirect("/matches");
 }
 
@@ -125,7 +131,7 @@ export async function deleteMatch(id: string) {
   const { error } = await supabase.from("matches").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
-  revalidatePath("/matches");
+  invalidateLeagueData();
 }
 
 export async function generateGroupFixtures(mode: "overwrite" | "append") {
@@ -140,11 +146,6 @@ export async function generateGroupFixtures(mode: "overwrite" | "append") {
     throw new Error("チームが2つ以上登録されている必要があります");
   }
 
-  if (mode === "overwrite") {
-    const { error: deleteError } = await supabase.from("matches").delete().eq("stage", "group");
-    if (deleteError) throw new Error(deleteError.message);
-  }
-
   const fixtures = generateRoundRobinFixtures(teams.map((t) => t.id));
   const rows = fixtures.map((f) => ({
     stage: "group" as Stage,
@@ -153,9 +154,20 @@ export async function generateGroupFixtures(mode: "overwrite" | "append") {
     status: "scheduled" as MatchStatus,
   }));
 
-  const { error: insertError } = await supabase.from("matches").insert(rows);
-  if (insertError) throw new Error(insertError.message);
+  let mutated = false;
+  try {
+    if (mode === "overwrite") {
+      const { error: deleteError } = await supabase.from("matches").delete().eq("stage", "group");
+      if (deleteError) throw new Error(deleteError.message);
+      mutated = true;
+    }
 
-  revalidatePath("/matches");
+    const { error: insertError } = await supabase.from("matches").insert(rows);
+    if (insertError) throw new Error(insertError.message);
+    mutated = true;
+  } finally {
+    if (mutated) invalidateLeagueData();
+  }
+
   redirect("/matches");
 }

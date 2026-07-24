@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { invalidateLeagueData } from "@/lib/data-cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { computeStandings } from "@/lib/standings";
 import { buildSemifinalPairings, getEffectiveOutcome, type MatchOutcomeInput } from "@/lib/tournament";
@@ -65,7 +65,7 @@ export async function generateTournament() {
   ]);
   if (insertError) throw new Error(insertError.message);
 
-  revalidatePath("/matches");
+  invalidateLeagueData();
   redirect("/matches");
 }
 
@@ -93,7 +93,7 @@ export async function createReplay(matchId: string) {
   });
   if (insertError) throw new Error(insertError.message);
 
-  revalidatePath("/matches");
+  invalidateLeagueData();
 }
 
 /**
@@ -141,5 +141,5 @@ export async function reflectTournamentProgress() {
   ]);
   if (insertError) throw new Error(insertError.message);
 
-  revalidatePath("/matches");
+  invalidateLeagueData();
 }

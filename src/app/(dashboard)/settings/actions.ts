@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { invalidateLeagueData } from "@/lib/data-cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type SettingsFormState = { error: string | null; success?: boolean };
@@ -33,10 +33,12 @@ export async function updateSettings(
       .from("app_settings")
       .update({ value: update.value })
       .eq("key", update.key);
-    if (error) return { error: error.message };
+    if (error) {
+      invalidateLeagueData();
+      return { error: error.message };
+    }
   }
 
-  revalidatePath("/settings");
-  revalidatePath("/", "layout");
+  invalidateLeagueData();
   return { error: null, success: true };
 }

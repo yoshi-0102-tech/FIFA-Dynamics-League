@@ -1,16 +1,13 @@
 import { notFound } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getTeams } from "@/lib/data";
 import TeamForm from "../TeamForm";
 import { updateTeam } from "../actions";
 import DeleteTeamButton from "../DeleteTeamButton";
 import { PageHeader, Card } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
-
 export default async function EditTeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const { data: team } = await supabase.from("teams").select("*").eq("id", id).single();
+  const team = (await getTeams()).find((item) => item.id === id);
 
   if (!team) notFound();
 

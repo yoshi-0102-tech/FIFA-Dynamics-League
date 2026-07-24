@@ -1,41 +1,32 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getMatches, getMatchEvents, getSuspensions, getTeams } from "@/lib/data";
 import { computeCardSummary, type StageBucket } from "@/lib/cards";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
 import type { Stage } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
 export default async function CardsPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: events, error: eventsError }, { data: matches, error: matchesError }, { data: suspensions }, { data: teams }] =
-    await Promise.all([
-      supabase.from("match_events").select("player_name, team_id, event_type, match_id"),
-      supabase
-        .from("matches")
-        .select("id, stage, home_team_id, away_team_id, status, match_datetime, created_at"),
-      supabase.from("suspensions").select("id, player_name, team_id, reason, is_served, source_match_id"),
-      supabase.from("teams").select("id, name"),
-    ]);
+  const [events, matches, suspensions, teams] = await Promise.all([
+    getMatchEvents(),
+    getMatches(),
+    getSuspensions(),
+    getTeams(),
+  ]);
 
-  const error = eventsError ?? matchesError;
-  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name]));
-  const matchStageById = new Map((matches ?? []).map((m) => [m.id, m.stage as Stage]));
-  const matchById = new Map((matches ?? []).map((m) => [m.id, m]));
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
+  const matchStageById = new Map(matches.map((m) => [m.id, m.stage as Stage]));
+  const matchById = new Map(matches.map((m) => [m.id, m]));
 
-  const currentBucket: StageBucket = (matches ?? []).some((m) => m.stage !== "group")
-    ? "tournament"
-    : "group";
+  const currentBucket: StageBucket = matches.some((m) => m.stage !== "group") ? "tournament" : "group";
 
   const rows = computeCardSummary(
-    events ?? [],
+    events,
     matchStageById,
-    suspensions ?? [],
+    suspensions,
     currentBucket,
-    matches ?? [],
+    matches,
   );
 
   const totalSuspensionsByPlayer = new Map<string, number>();
-  for (const s of suspensions ?? []) {
+  for (const s of suspensions) {
     const key = `${s.player_name}::${s.team_id}`;
     totalSuspensionsByPlayer.set(key, (totalSuspensionsByPlayer.get(key) ?? 0) + 1);
   }
@@ -60,12 +51,6 @@ export default async function CardsPage() {
           currentBucket === "group" ? "グループリーグ" : "決勝トーナメント"
         }（決勝トーナメント進出時にステージ内イエローはリセットされます。通算イエローは残ります）`}
       />
-
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          読み込みに失敗しました: {error.message}
-        </p>
-      )}
 
       <Card className="overflow-x-auto">
         {rows.length ? (

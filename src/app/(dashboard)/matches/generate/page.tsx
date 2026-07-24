@@ -1,17 +1,12 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getMatches, getTeams } from "@/lib/data";
 import { PageHeader, Card } from "@/components/ui";
 import GenerateFixturesForm from "./GenerateFixturesForm";
 
-export const dynamic = "force-dynamic";
-
 export default async function GenerateFixturesPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: teams }, { count: existingGroupMatches }] = await Promise.all([
-    supabase.from("teams").select("id, name"),
-    supabase.from("matches").select("id", { count: "exact", head: true }).eq("stage", "group"),
-  ]);
+  const [teams, matches] = await Promise.all([getTeams(), getMatches()]);
 
-  const teamCount = teams?.length ?? 0;
+  const teamCount = teams.length;
+  const existingGroupMatches = matches.filter((match) => match.stage === "group").length;
   const expectedMatchCount = teamCount * (teamCount - 1);
 
   return (
@@ -26,7 +21,7 @@ export default async function GenerateFixturesPage() {
             現在グループリーグの試合が{existingGroupMatches}件登録されています。
           </p>
         ) : null}
-        <GenerateFixturesForm teamCount={teamCount} hasExistingMatches={(existingGroupMatches ?? 0) > 0} />
+        <GenerateFixturesForm teamCount={teamCount} hasExistingMatches={existingGroupMatches > 0} />
       </Card>
     </div>
   );

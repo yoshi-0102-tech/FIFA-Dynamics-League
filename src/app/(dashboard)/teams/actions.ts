@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { invalidateLeagueData } from "@/lib/data-cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type FormState = { error: string | null };
@@ -21,7 +21,7 @@ export async function createTeam(_prevState: FormState, formData: FormData): Pro
   });
   if (error) return { error: error.message };
 
-  revalidatePath("/teams");
+  invalidateLeagueData();
   redirect("/teams");
 }
 
@@ -47,7 +47,7 @@ export async function updateTeam(
     .eq("id", id);
   if (error) return { error: error.message };
 
-  revalidatePath("/teams");
+  invalidateLeagueData();
   redirect("/teams");
 }
 
@@ -56,5 +56,5 @@ export async function deleteTeam(id: string) {
   const { error } = await supabase.from("teams").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
-  revalidatePath("/teams");
+  invalidateLeagueData();
 }

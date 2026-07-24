@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { invalidateLeagueData } from "@/lib/data-cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getStageBucket, shouldGenerateSuspension } from "@/lib/cards";
 import type { EventType, Stage } from "@/lib/types";
@@ -34,11 +34,14 @@ export async function createMatchEvent(
   });
   if (error) return { error: error.message };
 
-  if (eventType === "yellow_card" || eventType === "red_card") {
-    await maybeCreateSuspension({ matchId, playerName, teamId, eventType });
+  try {
+    if (eventType === "yellow_card" || eventType === "red_card") {
+      await maybeCreateSuspension({ matchId, playerName, teamId, eventType });
+    }
+  } finally {
+    invalidateLeagueData();
   }
 
-  revalidatePath(`/matches/${matchId}`);
   return { error: null };
 }
 
@@ -104,5 +107,5 @@ export async function deleteMatchEvent(matchId: string, eventId: string) {
   const { error } = await supabase.from("match_events").delete().eq("id", eventId);
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/matches/${matchId}`);
+  invalidateLeagueData();
 }

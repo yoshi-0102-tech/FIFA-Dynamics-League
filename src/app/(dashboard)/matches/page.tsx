@@ -1,24 +1,15 @@
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getMatches, getTeams } from "@/lib/data";
 import { PageHeader, Card, Badge, EmptyState, SecondaryButton } from "@/components/ui";
 import { STAGE_LABELS, STATUS_LABELS, STATUS_TONES } from "./stageLabels";
 import DeleteMatchButton from "./DeleteMatchButton";
 import GenerateTournamentButton from "./GenerateTournamentButton";
 import CreateReplayButton from "./CreateReplayButton";
 
-export const dynamic = "force-dynamic";
-
 export default async function MatchesPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: matches, error }, { data: teams }] = await Promise.all([
-    supabase
-      .from("matches")
-      .select("*")
-      .order("match_datetime", { ascending: true, nullsFirst: false }),
-    supabase.from("teams").select("id, name"),
-  ]);
+  const [matches, teams] = await Promise.all([getMatches(), getTeams()]);
 
-  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name]));
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
 
   return (
     <div className="flex flex-col gap-4">
@@ -41,14 +32,8 @@ export default async function MatchesPage() {
         }
       />
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          読み込みに失敗しました: {error.message}
-        </p>
-      )}
-
       <Card className="overflow-x-auto">
-        {matches?.length ? (
+        {matches.length ? (
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="bg-surface-muted">
               <tr>

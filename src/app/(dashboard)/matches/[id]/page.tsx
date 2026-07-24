@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getMatches, getMatchEvents, getTeams } from "@/lib/data";
 import MatchForm from "../MatchForm";
 import { updateMatch } from "../actions";
 import DeleteMatchButton from "../DeleteMatchButton";
@@ -9,29 +9,18 @@ import DeleteEventButton from "./DeleteEventButton";
 import { EVENT_TYPE_LABELS } from "../stageLabels";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
-
 export default async function EditMatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const [{ data: match }, { data: teams }, { data: events }, { data: allEvents }] = await Promise.all([
-    supabase.from("matches").select("*").eq("id", id).single(),
-    supabase.from("teams").select("*").order("display_order", { ascending: true }),
-    supabase
-      .from("match_events")
-      .select("*")
-      .eq("match_id", id)
-      .order("created_at", { ascending: true }),
-    supabase.from("match_events").select("player_name, team_id"),
-  ]);
+  const [matches, teams, allEvents] = await Promise.all([getMatches(), getTeams(), getMatchEvents()]);
+  const match = matches.find((item) => item.id === id);
 
   if (!match) notFound();
 
-  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name]));
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
   const homeTeam = { id: match.home_team_id, name: teamNameById.get(match.home_team_id) ?? "?" };
   const awayTeam = { id: match.away_team_id, name: teamNameById.get(match.away_team_id) ?? "?" };
 
-  const matchEvents = events ?? [];
+  const matchEvents = allEvents.filter((event) => event.match_id === id);
   const goalEvents = matchEvents
     .filter((e) => e.event_type === "goal")
     .map((e) => ({ id: e.id, player_name: e.player_name, team_id: e.team_id }));
@@ -41,7 +30,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
       new Set(matchEvents.filter((e) => e.team_id === teamId).map((e) => e.player_name)),
     ).sort();
     const otherPlayers = Array.from(
-      new Set((allEvents ?? []).filter((e) => e.team_id === teamId).map((e) => e.player_name)),
+      new Set(allEvents.filter((e) => e.team_id === teamId).map((e) => e.player_name)),
     )
       .filter((name) => !matchPlayers.includes(name))
       .sort();
@@ -85,7 +74,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
           actions={<DeleteMatchButton matchId={match.id} redirectTo="/matches" />}
         />
         <Card className="max-w-md p-5">
-          <MatchForm match={match} teams={teams ?? []} action={updateMatchWithId} submitLabel="保存する" />
+          <MatchForm match={match} teams={teams} action={updateMatchWithId} submitLabel="保存する" />
         </Card>
       </div>
 

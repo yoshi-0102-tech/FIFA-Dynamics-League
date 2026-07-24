@@ -1,8 +1,6 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAppSettings, getMatches, getTeams } from "@/lib/data";
 import { computeStandings, type StandingsMatch } from "@/lib/standings";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
-
-export const dynamic = "force-dynamic";
 
 const COLS = [
   { key: "played", label: "試合" },
@@ -16,26 +14,17 @@ const COLS = [
 ] as const;
 
 export default async function StandingsPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: teams, error: teamsError }, { data: matches, error: matchesError }, { data: qualifiersSetting }] =
-    await Promise.all([
-      supabase
-        .from("teams")
-        .select("id, name, display_order")
-        .order("display_order", { ascending: true }),
-      supabase
-        .from("matches")
-        .select("home_team_id, away_team_id, home_score, away_score")
-        .eq("stage", "group")
-        .eq("status", "completed"),
-      supabase.from("app_settings").select("value").eq("key", "group_stage_qualifiers").maybeSingle(),
-    ]);
+  const [teams, matches, settings] = await Promise.all([getTeams(), getMatches(), getAppSettings()]);
+  const qualifiersCount = Number(settings.find((setting) => setting.key === "group_stage_qualifiers")?.value ?? 4);
 
-  const error = teamsError ?? matchesError;
-  const qualifiersCount = Number(qualifiersSetting?.value ?? 4);
-
-  const completedMatches: StandingsMatch[] = (matches ?? [])
-    .filter((m) => m.home_score !== null && m.away_score !== null)
+  const completedMatches: StandingsMatch[] = matches
+    .filter(
+      (match) =>
+        match.stage === "group" &&
+        match.status === "completed" &&
+        match.home_score !== null &&
+        match.away_score !== null,
+    )
     .map((m) => ({
       home_team_id: m.home_team_id,
       away_team_id: m.away_team_id,
@@ -43,7 +32,7 @@ export default async function StandingsPage() {
       away_score: m.away_score as number,
     }));
 
-  const { rows, fullyResolved } = computeStandings(teams ?? [], completedMatches);
+  const { rows, fullyResolved } = computeStandings(teams, completedMatches);
 
   return (
     <div className="flex flex-col gap-4">
@@ -51,12 +40,6 @@ export default async function StandingsPage() {
         title="順位表"
         description={`グループリーグ。上位${qualifiersCount}チームが決勝トーナメントに進出します`}
       />
-
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          読み込みに失敗しました: {error.message}
-        </p>
-      )}
 
       {(teams?.length ?? 0) === 0 ? (
         <Card className="p-5">

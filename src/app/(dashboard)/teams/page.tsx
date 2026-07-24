@@ -1,16 +1,10 @@
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getTeams } from "@/lib/data";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
 import DeleteTeamButton from "./DeleteTeamButton";
 
-export const dynamic = "force-dynamic";
-
 export default async function TeamsPage() {
-  const supabase = createSupabaseServerClient();
-  const { data: teams, error } = await supabase
-    .from("teams")
-    .select("*")
-    .order("display_order", { ascending: true });
+  const teams = await getTeams();
 
   return (
     <div className="flex flex-col gap-4">
@@ -27,14 +21,8 @@ export default async function TeamsPage() {
         }
       />
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          読み込みに失敗しました: {error.message}
-        </p>
-      )}
-
       <Card className="overflow-x-auto">
-        {teams?.length ? (
+        {teams.length ? (
           <table className="w-full min-w-[480px] text-left text-sm">
             <thead className="bg-surface-muted">
               <tr>
