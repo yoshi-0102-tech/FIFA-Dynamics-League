@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/teams", label: "チーム管理" },
   { href: "/matches", label: "試合入力" },
   { href: "/guide", label: "使い方ガイド" },
+  { href: "/updates", label: "更新情報" },
   { href: "/settings", label: "設定" },
 ];
 
