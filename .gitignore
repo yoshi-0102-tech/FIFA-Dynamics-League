@@ -16,3 +16,6 @@ coverage/
 *.log
 .vercel
 .env*
+
+# 生成物（請求書サンプルPDF などの出力先）
+output/
