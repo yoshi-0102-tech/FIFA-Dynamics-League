@@ -1,0 +1,19 @@
+# 改行コードは LF に統一する。
+#
+# Windows (Git for Windows) の既定 core.autocrlf=true のまま clone すると
+# シェルスクリプトが CRLF になり、Git Bash で
+#   bash: ./script.sh: /usr/bin/env: bad interpreter
+# と即座に落ちる。Mac↔Windows で無意味な差分が出るのも防ぐ。
+* text=auto eol=lf
+
+# バイナリは変換対象から明示的に外す
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.sqlite binary
+*.woff  binary
+*.woff2 binary
