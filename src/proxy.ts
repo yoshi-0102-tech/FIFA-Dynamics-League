@@ -6,6 +6,11 @@ const PUBLIC_PATHS = ["/login", "/api/login"];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // This exact route uses CRON_SECRET authentication in its handler.
+  if (pathname === "/api/cron/keep-alive") {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_PATHS.some((path) => pathname === path)) {
     return NextResponse.next();
   }
