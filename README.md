@@ -43,6 +43,7 @@ npm run build      # 本番ビルド
 | 変数名 | 説明 |
 | --- | --- |
 | `APP_PASSWORD` | 参加者用の共通パスワード |
+| `CRON_SECRET` | Vercel Cron認証用のランダムな秘密鍵（Productionに設定） |
 | `AUTH_COOKIE_SECRET` | セッション Cookie 署名用の秘密鍵（`openssl rand -hex 32` などで生成） |
 | `SUPABASE_URL` | Supabase プロジェクトの URL（Project Settings > API） |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase の service role キー（同上）。**クライアントに絶対に出さない** |
@@ -59,12 +60,21 @@ Supabase へのアクセスはすべてサーバー側（Route Handler / Server 
 
 ### Supabase Free の自動ポーズ対策
 
-Supabase Free プランは **7日間 API アクセスが無いとプロジェクトが自動ポーズ**される。大会オフ期間はアクセスが途絶えがちなので要注意。
+Supabase Free は、過去7日間のDB活動が十分でないと自動停止の対象になる。完全な無アクセスだけが条件ではない。
 
-- 対策案A: Vercel Cron（Hobby プランは1日1回まで）で軽い ping 用 API を定期実行する
-- 対策案B: オフ期間はポーズを許容し、次シーズン開始前に Supabase ダッシュボードから手動で再開する
+`vercel.json` の Vercel Cron が毎日 UTC 00:00（日本時間09時台、Hobbyでは実行時刻に幅あり）に `/api/cron/keep-alive` を実行する。ハンドラーはキャッシュを使わず、設定・チーム・試合の3テーブルを各1件だけ読み取る。データは更新せず、レスポンスにも返さない。
 
-MVP では対策を組み込んでおらず、運用時に上記いずれかを選択すること。
+**有効化手順**
+1. Vercel の Project Settings > Environment Variables で、Production に `CRON_SECRET` を設定する。`openssl rand -hex 32` 等で生成したランダム値を使い、GitHubやチャットには貼らない。
+2. この変更を本番デプロイする。既存の `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を利用する。
+3. Project Settings > Cron Jobs にジョブが登録され、有効になっていることを確認し、Runで手動実行する。ログで `/api/cron/keep-alive` が200になったことを確認する。
+4. Supabase側のAPI/DBログでも読み取りを確認する。401はCRON_SECRET未設定・不一致、503は接続設定やDB停止などを確認する。
+
+CronルートだけはCookie認証を通さず、ハンドラーで `Authorization: Bearer <CRON_SECRET>` を必須にする。キー未設定の場合も401で拒否する。通常のページ/APIの認証は維持する。
+
+定期アクセスは停止リスクを下げる対策であり、無料プランで停止しないことを保証するものではない。すでに停止済みなら、Supabaseダッシュボードで先に再開する。停止予告が再度届いた場合も活動状況を確認する。活動不足による停止の対象外にするには有料プランへ移行する。
+
+公式: [Supabase Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing) / [Vercel Cron認証](https://vercel.com/docs/cron-jobs/manage-cron-jobs) / [Cron制限](https://vercel.com/docs/cron-jobs/usage-and-pricing)
 
 ## Vercel デプロイ手順
 
@@ -104,7 +114,6 @@ Vercel Hobby プランは **非商用・個人利用限定**、関数実行10秒
 ## 改善案リスト（今後の課題）
 
 - オウンゴールの実装（DB は `event_type` 拡張で対応可能な設計済み）
-- Supabase 自動ポーズ対策の自動化（Cron ping）
 - 試合削除時のカスケード削除の UI 上の明示（現状は DB の `on delete cascade` に依存）
 - フォームのバリデーションエラー時に入力値が保持されない（React の `useActionState` + 非制御コンポーネントの制約。実害は再入力の手間のみ）
 - 決勝トーナメントの再生成（誤操作時のやり直し）機能
