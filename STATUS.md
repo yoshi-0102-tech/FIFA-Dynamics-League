@@ -2,9 +2,11 @@
 
 - 段階: 運用中
 - 一言: MVPを本番運用中。読み取りキャッシュ・静的ルート化・Vercel東京リージョン固定により画面遷移を高速化。本番URL: https://fifa-dynamics-league.vercel.app
-- 更新日: 2026-10-07
+- 更新日: 2026-10-13
 
 ## 作業ログ
+
+- 2026-10-13: ProductionにCRON_SECRETを設定しPR #1をマージ。本番デプロイのREADYと、公開URLのCron APIが認証なし401・正しいBearer認証で200（ok:true、no-store）になることを確認。DBの3テーブル読み取りは成功。日次Cron（UTC 00:00、日本時間09時台）設定を本番へ反映。次回のスケジュール実行・Supabase側ログは未確認。
 
 - 2026-10-07: 自動停止リスク低減のため、CRON_SECRET認証付きのDB読み取りAPIとVercel日次Cronを追加。本番有効化にはProductionのCRON_SECRET設定・デプロイ・手動実行確認が必要（未確認）。
 
